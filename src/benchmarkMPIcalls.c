@@ -43,6 +43,8 @@
 #include "collective_ops/collectives.h"
 #include "reprompi_bench/utils/keyvalue_store.h"
 #include "reprompi_bench/caching/caching.h"
+#include "arrival_patterns/parse_arrival_options.h"
+#include "arrival_patterns/work_functions.h"
 
 #define MY_MAX(x, y) (((x) > (y)) ? (x) : (y))
 
@@ -157,6 +159,9 @@ int main(int argc, char* argv[]) {
     basic_collective_params_t coll_basic_info;
     time_t start_time, end_time;
     reprompib_bench_print_info_t print_info;
+    reprompib_bench_arrival_options_t arrival_opts;
+    work_function_t* work_func;
+    work_params_t wparams;
 
     reprompib_sync_module_t clock_sync;
     reprompib_proc_sync_module_t proc_sync;
@@ -185,6 +190,9 @@ int main(int argc, char* argv[]) {
     // parse arguments and set-up benchmarking jobs
     print_command_line_args(argc, argv);
 
+    // parse the work-related arguments (work type, reps, etc.)
+    reprompib_arrival_parse_params(&arrival_opts, argc, argv);
+
     reprompib_parse_bench_options(argc, argv);  // only "-h" for help
 
     // parse common arguments (e.g., msizes list, MPI calls to benchmark, input file)
@@ -207,6 +215,15 @@ int main(int argc, char* argv[]) {
       reprompib_print_error_and_exit("The number of repetitions is not defined (specify the \"--nrep\" command-line argument or provide an input file)\n");
     }
     generate_job_list(&common_opts, opts.n_rep, &jlist);
+
+    // set work function
+    initialize_work_params(2, &wparams);
+    work_func = get_work_function_from_name(arrival_opts.work_type);
+    if (work_func == NULL) {
+      reprompib_print_error_and_exit("Invalid work function");
+    }
+    wparams.nreps = arrival_opts.work_reps;
+    wparams.root_proc = arrival_opts.root_proc;
 
 
     init_collective_basic_info(common_opts, procs, &coll_basic_info);
@@ -243,6 +260,7 @@ int main(int argc, char* argv[]) {
         while(1) {
           proc_sync.start_sync(MPI_COMM_WORLD);
 
+          (*work_func)(&wparams);
           tstart_sec[i] = get_time();
           collective_calls[job.call_index].collective_call(&coll_params);
           tend_sec[i] = get_time();
@@ -297,6 +315,8 @@ int main(int argc, char* argv[]) {
     reprompib_deregister_sync_modules();
     reprompib_deregister_proc_sync_modules();
     reprompib_deregister_caching_modules();
+    reprompib_arrival_free_params(&arrival_opts);
+
     /* shut down MPI */
     MPI_Finalize();
 
