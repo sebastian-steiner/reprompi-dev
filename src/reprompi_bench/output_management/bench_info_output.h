@@ -30,6 +30,7 @@
 #include "reprompi_bench/option_parser/parse_timing_options.h"
 #include "reprompi_bench/sync/clock_sync/synchronization.h"
 #include "reprompi_bench/sync/process_sync/process_synchronization.h"
+#include "arrival_patterns/parse_arrival_options.h"
 
 typedef struct bench_print_info {
   reprompib_sync_module_t* clock_sync;
@@ -39,7 +40,7 @@ typedef struct bench_print_info {
 
 void print_command_line_args(int argc, char* argv[]);
 void print_common_settings(const reprompib_bench_print_info_t* print_info,
-    const reprompib_common_options_t* opts); //, const reprompib_dictionary_t* dict);
+    const reprompib_common_options_t* opts, const reprompib_bench_arrival_options_t* arrival_opts); //, const reprompib_dictionary_t* dict);
 void print_common_settings_to_file(FILE* f, const reprompib_bench_print_info_t* print_info);
 //,   const reprompib_dictionary_t* dict);
 void print_final_info(const reprompib_common_options_t* opts, const time_t start_time, const time_t end_time);

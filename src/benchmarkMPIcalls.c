@@ -50,7 +50,7 @@
 
 static const int OUTPUT_ROOT_PROC = 0;
 
-static void print_initial_settings(const reprompib_options_t* opts, const reprompib_common_options_t* common_opts,
+static void print_initial_settings(const reprompib_options_t* opts, const reprompib_common_options_t* common_opts, const reprompib_bench_arrival_options_t* arrival_opts,
     //const reprompib_dictionary_t* dict,
     const reprompib_bench_print_info_t* print_info) {
     int my_rank, np;
@@ -58,7 +58,7 @@ static void print_initial_settings(const reprompib_options_t* opts, const reprom
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
     MPI_Comm_size(MPI_COMM_WORLD, &np);
 
-    print_common_settings(print_info, common_opts);//, dict);
+    print_common_settings(print_info, common_opts, arrival_opts);//, dict);
 
     if (my_rank == OUTPUT_ROOT_PROC) {
         FILE* f;
@@ -249,7 +249,7 @@ int main(int argc, char* argv[]) {
         print_info.timing_method = runtime_type;
         if (jindex == 0) {
             //print_initial_settings(&opts, &common_opts, &params_dict, &print_info);
-            print_initial_settings(&opts, &common_opts, &print_info);
+            print_initial_settings(&opts, &common_opts, &arrival_opts, &print_info);
             print_results_header(&print_info, &opts, common_opts.output_file, opts.verbose);
         }
 

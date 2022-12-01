@@ -31,6 +31,7 @@
 #include "reprompi_bench/sync/time_measurement.h"
 #include "reprompi_bench/option_parser/parse_common_options.h"
 #include "reprompi_bench/option_parser/parse_timing_options.h"
+#include "arrival_patterns/parse_arrival_options.h"
 #include "collective_ops/collectives.h"
 #include "reprompi_bench/utils/keyvalue_store.h"
 #include "bench_info_output.h"
@@ -138,9 +139,21 @@ static void print_benchmark_common_settings_to_file(FILE* f, const reprompib_ben
     }
 }
 
+static void print_benchmark_arrival_options_to_file(FILE* f,
+    const reprompib_bench_arrival_options_t* opts) {
+    int my_rank;
+
+    MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
+
+    if (my_rank == OUTPUT_ROOT_PROC) {
+        fprintf(f, "#@work-type=%s\n", opts->work_type);
+        fprintf(f, "#@work-root=%d\n", opts->root_proc);
+        fprintf(f, "#@work-reps=%ld\n", opts->work_reps);
+    }
+}
 
 void print_common_settings(const reprompib_bench_print_info_t* print_info,
-    const reprompib_common_options_t* opts) { //, const reprompib_dictionary_t* dict) {
+    const reprompib_common_options_t* opts, const reprompib_bench_arrival_options_t* arrival_opts) { //, const reprompib_dictionary_t* dict) {
     FILE* f = stdout;
     int my_rank;
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
@@ -151,6 +164,7 @@ void print_common_settings(const reprompib_bench_print_info_t* print_info,
     }
 
     print_benchmark_common_settings_to_file(stdout, print_info, opts); //, dict);
+    print_benchmark_arrival_options_to_file(stdout, arrival_opts);
     if (my_rank == OUTPUT_ROOT_PROC) {
         if (opts->output_file != NULL) {
             f = fopen(opts->output_file, "a");
